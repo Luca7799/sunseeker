@@ -9,16 +9,12 @@ interface FilterPanelProps {
   compact?: boolean
 }
 
-// ---------------------------------------------------------------------------
-// Category list
-// ---------------------------------------------------------------------------
-
 const ALL_CATEGORIES: VenueCategory[] = [
   'cafe', 'bar', 'restaurant', 'rooftop', 'terrace', 'park',
 ]
 
 // ---------------------------------------------------------------------------
-// Toggle row
+// Toggle row — big tap target for mobile
 // ---------------------------------------------------------------------------
 
 function FilterToggle({
@@ -36,27 +32,26 @@ function FilterToggle({
     <button
       onClick={onToggle}
       className={cn(
-        'w-full flex items-center justify-between px-3 py-2.5 rounded-xl transition-colors duration-100',
-        active ? 'bg-amber-50' : 'hover:bg-stone-50'
+        'w-full flex items-center justify-between px-4 py-3.5 rounded-2xl transition-colors duration-100',
+        active ? 'bg-amber-50' : 'bg-stone-50 active:bg-stone-100'
       )}
     >
-      <span className={cn('flex items-center gap-2 text-sm font-medium', active ? 'text-amber-700' : 'text-stone-600')}>
-        <span>{icon}</span>
+      <span className={cn(
+        'flex items-center gap-3 text-base font-medium',
+        active ? 'text-amber-800' : 'text-stone-700'
+      )}>
+        <span className="text-xl w-7 text-center">{icon}</span>
         {label}
       </span>
       {/* Toggle pill */}
-      <span
-        className={cn(
-          'relative inline-flex h-5 w-9 items-center rounded-full transition-colors duration-150',
-          active ? 'bg-amber-500' : 'bg-stone-200'
-        )}
-      >
-        <span
-          className={cn(
-            'inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform duration-150',
-            active ? 'translate-x-4' : 'translate-x-0.5'
-          )}
-        />
+      <span className={cn(
+        'relative inline-flex h-7 w-12 shrink-0 items-center rounded-full transition-colors duration-200',
+        active ? 'bg-amber-500' : 'bg-stone-300'
+      )}>
+        <span className={cn(
+          'inline-block h-5 w-5 transform rounded-full bg-white shadow-sm transition-transform duration-200',
+          active ? 'translate-x-6' : 'translate-x-1'
+        )} />
       </span>
     </button>
   )
@@ -67,30 +62,38 @@ function FilterToggle({
 // ---------------------------------------------------------------------------
 
 function FilterContent({ onClose }: { onClose?: () => void }) {
-  const { filters, setFilter, toggleCategory, clearFilters } = useFiltersStore()
+  const { filters, setFilter, toggleCategory, clearFilters, activeFilterCount } = useFiltersStore()
+  const count = activeFilterCount()
 
   const CONFIDENCE_OPTIONS: { value: ConfidenceLabel | null; label: string }[] = [
     { value: null, label: 'Any' },
     { value: 'high', label: 'High+' },
-    { value: 'confirmed', label: 'Confirmed only' },
+    { value: 'confirmed', label: 'Confirmed' },
   ]
 
   return (
     <div className="flex flex-col h-full">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-stone-100">
-        <h2 className="font-semibold text-stone-800 text-base">Filters</h2>
+      <div className="flex items-center justify-between px-5 pt-2 pb-4">
+        <div>
+          <h2 className="text-lg font-bold text-stone-900">Filters</h2>
+          {count > 0 && (
+            <p className="text-sm text-amber-600 font-medium">{count} active</p>
+          )}
+        </div>
         <div className="flex items-center gap-3">
-          <button
-            onClick={clearFilters}
-            className="text-sm text-stone-400 hover:text-stone-600 transition-colors"
-          >
-            Clear all
-          </button>
+          {count > 0 && (
+            <button
+              onClick={clearFilters}
+              className="text-sm font-medium text-stone-400 hover:text-stone-600 px-3 py-1.5 rounded-xl hover:bg-stone-100 transition-colors"
+            >
+              Clear all
+            </button>
+          )}
           {onClose && (
             <button
               onClick={onClose}
-              className="text-stone-400 hover:text-stone-600 p-1 rounded-lg hover:bg-stone-100 transition-colors"
+              className="w-9 h-9 flex items-center justify-center rounded-full bg-stone-100 text-stone-500 hover:bg-stone-200 transition-colors text-lg"
               aria-label="Close filters"
             >
               ✕
@@ -99,33 +102,36 @@ function FilterContent({ onClose }: { onClose?: () => void }) {
         </div>
       </div>
 
-      {/* Scroll body */}
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
-        {/* Sunlight toggles */}
+      {/* Scrollable body */}
+      <div className="flex-1 overflow-y-auto px-5 pb-8 space-y-5">
+
+        {/* Sunlight section */}
         <section>
-          <p className="text-xs text-stone-400 uppercase tracking-wide font-medium mb-2">Sunlight</p>
-          <div className="space-y-1">
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
+            ☀️ Sunlight
+          </p>
+          <div className="space-y-2">
             <FilterToggle
               label="Sunny now"
-              icon="☀"
+              icon="☀️"
               active={filters.sunnyNow}
               onToggle={() => setFilter('sunnyNow', !filters.sunnyNow)}
             />
             <FilterToggle
               label="Sunny in 30 min"
-              icon="🌤"
+              icon="🌤️"
               active={filters.sunnyIn30}
               onToggle={() => setFilter('sunnyIn30', !filters.sunnyIn30)}
             />
           </div>
         </section>
 
-        <div className="h-px bg-stone-100" />
-
-        {/* Venue toggles */}
+        {/* Venue section */}
         <section>
-          <p className="text-xs text-stone-400 uppercase tracking-wide font-medium mb-2">Venue</p>
-          <div className="space-y-1">
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
+            🏠 Venue
+          </p>
+          <div className="space-y-2">
             <FilterToggle
               label="Outdoor seating"
               icon="🪑"
@@ -138,15 +144,21 @@ function FilterContent({ onClose }: { onClose?: () => void }) {
               active={filters.openNow}
               onToggle={() => setFilter('openNow', !filters.openNow)}
             />
+            <FilterToggle
+              label="Confirmed outdoor only"
+              icon="✅"
+              active={filters.confirmedOutdoorOnly}
+              onToggle={() => setFilter('confirmedOutdoorOnly', !filters.confirmedOutdoorOnly)}
+            />
           </div>
         </section>
 
-        <div className="h-px bg-stone-100" />
-
-        {/* Category chips */}
+        {/* Category section */}
         <section>
-          <p className="text-xs text-stone-400 uppercase tracking-wide font-medium mb-2">Category</p>
-          <div className="flex flex-wrap gap-2">
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
+            📍 Category
+          </p>
+          <div className="grid grid-cols-3 gap-2">
             {ALL_CATEGORIES.map((cat) => {
               const active = filters.categories.includes(cat)
               return (
@@ -154,24 +166,25 @@ function FilterContent({ onClose }: { onClose?: () => void }) {
                   key={cat}
                   onClick={() => toggleCategory(cat)}
                   className={cn(
-                    'flex items-center gap-1.5 text-sm px-3 py-1.5 rounded-full border transition-all duration-100',
+                    'flex flex-col items-center gap-1 py-3 px-2 rounded-2xl border-2 transition-all duration-100 text-center',
                     active
-                      ? 'bg-amber-100 border-amber-300 text-amber-700 font-medium'
-                      : 'bg-white border-stone-200 text-stone-600 hover:border-stone-300'
+                      ? 'bg-amber-50 border-amber-400 text-amber-800'
+                      : 'bg-stone-50 border-transparent text-stone-600 active:bg-stone-100'
                   )}
                 >
-                  {categoryIcon(cat)} {categoryLabel(cat)}
+                  <span className="text-2xl">{categoryIcon(cat)}</span>
+                  <span className="text-xs font-semibold leading-tight">{categoryLabel(cat)}</span>
                 </button>
               )
             })}
           </div>
         </section>
 
-        <div className="h-px bg-stone-100" />
-
-        {/* Confidence */}
+        {/* Confidence section */}
         <section>
-          <p className="text-xs text-stone-400 uppercase tracking-wide font-medium mb-2">Confidence</p>
+          <p className="text-xs font-semibold text-stone-400 uppercase tracking-widest mb-3">
+            📊 Data confidence
+          </p>
           <div className="flex gap-2">
             {CONFIDENCE_OPTIONS.map((opt) => {
               const active = filters.minConfidence === opt.value
@@ -180,10 +193,10 @@ function FilterContent({ onClose }: { onClose?: () => void }) {
                   key={String(opt.value)}
                   onClick={() => setFilter('minConfidence', opt.value)}
                   className={cn(
-                    'text-sm px-3 py-1.5 rounded-full border transition-all duration-100',
+                    'flex-1 py-3 rounded-2xl border-2 text-sm font-semibold transition-all duration-100',
                     active
-                      ? 'bg-amber-100 border-amber-300 text-amber-700 font-medium'
-                      : 'bg-white border-stone-200 text-stone-600 hover:border-stone-300'
+                      ? 'bg-amber-50 border-amber-400 text-amber-800'
+                      : 'bg-stone-50 border-transparent text-stone-600 active:bg-stone-100'
                   )}
                 >
                   {opt.label}
@@ -193,78 +206,42 @@ function FilterContent({ onClose }: { onClose?: () => void }) {
           </div>
         </section>
 
-        <div className="h-px bg-stone-100" />
-
-        {/* Confirmed outdoor only */}
-        <section>
-          <FilterToggle
-            label="Confirmed outdoor seating only"
-            icon="✓"
-            active={filters.confirmedOutdoorOnly}
-            onToggle={() => setFilter('confirmedOutdoorOnly', !filters.confirmedOutdoorOnly)}
-          />
-        </section>
       </div>
     </div>
   )
 }
 
 // ---------------------------------------------------------------------------
-// Compact trigger button (used inside list header)
-// ---------------------------------------------------------------------------
-
-function CompactFilterButton({ onClick, count }: { onClick: () => void; count: number }) {
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        'relative flex items-center gap-1.5 text-sm font-medium px-3 py-2 rounded-xl border transition-all duration-100',
-        count > 0
-          ? 'bg-amber-50 border-amber-200 text-amber-700'
-          : 'bg-white border-stone-200 text-stone-600 hover:border-stone-300'
-      )}
-    >
-      <span>⚙</span>
-      Filters
-      {count > 0 && (
-        <span className="absolute -top-1.5 -right-1.5 w-4 h-4 text-[10px] font-bold bg-amber-500 text-white rounded-full flex items-center justify-center">
-          {count}
-        </span>
-      )}
-    </button>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Bottom sheet / drawer for full filter panel on mobile
+// Bottom sheet
 // ---------------------------------------------------------------------------
 
 function FilterBottomSheet({ open, onClose }: { open: boolean; onClose: () => void }) {
   return (
     <>
       {/* Backdrop */}
-      {open && (
-        <div
-          className="fixed inset-0 bg-black/30 z-40 transition-opacity"
-          onClick={onClose}
-          aria-hidden
-        />
-      )}
+      <div
+        className={cn(
+          'fixed inset-0 bg-black/40 z-40 transition-opacity duration-300',
+          open ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'
+        )}
+        onClick={onClose}
+        aria-hidden
+      />
 
       {/* Sheet */}
       <div
         className={cn(
-          'fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-2xl shadow-xl transition-transform duration-300 ease-out',
-          'max-h-[85vh] flex flex-col',
-          open ? 'translate-y-0' : 'translate-y-full'
+          'fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl shadow-2xl',
+          'max-h-[88vh] flex flex-col transition-transform duration-300 ease-out'
         )}
+        style={{ transform: open ? 'translateY(0)' : 'translateY(100%)' }}
         role="dialog"
         aria-modal
         aria-label="Filters"
       >
         {/* Drag handle */}
-        <div className="flex justify-center pt-3 pb-1">
-          <div className="w-10 h-1 rounded-full bg-stone-200" />
+        <div className="flex justify-center pt-3 pb-2 shrink-0">
+          <div className="w-10 h-1.5 rounded-full bg-stone-200" />
         </div>
 
         <FilterContent onClose={onClose} />
@@ -274,41 +251,63 @@ function FilterBottomSheet({ open, onClose }: { open: boolean; onClose: () => vo
 }
 
 // ---------------------------------------------------------------------------
-// Exported component
+// Trigger button — shown on mobile map
+// ---------------------------------------------------------------------------
+
+function FilterTriggerButton({ onClick, count }: { onClick: () => void; count: number }) {
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        'flex items-center gap-2 px-5 py-3 rounded-full shadow-lg text-sm font-semibold transition-all duration-150',
+        'border backdrop-blur-sm',
+        count > 0
+          ? 'bg-amber-500 border-amber-400 text-white shadow-amber-200'
+          : 'bg-white/95 border-stone-200 text-stone-700'
+      )}
+    >
+      <span className="text-base">⚙️</span>
+      Filters
+      {count > 0 && (
+        <span className="bg-white text-amber-600 rounded-full w-5 h-5 text-xs font-bold flex items-center justify-center">
+          {count}
+        </span>
+      )}
+    </button>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Export
 // ---------------------------------------------------------------------------
 
 export function FilterPanel({ compact = false }: FilterPanelProps) {
   const [sheetOpen, setSheetOpen] = useState(false)
   const activeFilterCount = useFiltersStore((s) => s.activeFilterCount())
 
+  // Compact mode (used in list view header)
   if (compact) {
     return (
       <>
-        <CompactFilterButton
-          onClick={() => setSheetOpen(true)}
-          count={activeFilterCount}
-        />
+        <FilterTriggerButton onClick={() => setSheetOpen(true)} count={activeFilterCount} />
         <FilterBottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} />
       </>
     )
   }
 
-  // On mobile: compact trigger button + bottom sheet
-  // On desktop (md+): full inline panel
   return (
     <>
-      {/* Mobile: compact button + bottom sheet */}
+      {/* Mobile: floating pill button + bottom sheet */}
       <div className="md:hidden">
-        <CompactFilterButton
-          onClick={() => setSheetOpen(true)}
-          count={activeFilterCount}
-        />
+        <FilterTriggerButton onClick={() => setSheetOpen(true)} count={activeFilterCount} />
         <FilterBottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} />
       </div>
 
-      {/* Desktop: full inline sidebar panel */}
+      {/* Desktop: full sidebar panel */}
       <div className="hidden md:block bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden w-72">
-        <FilterContent />
+        <div className="p-4">
+          <FilterContent />
+        </div>
       </div>
     </>
   )
