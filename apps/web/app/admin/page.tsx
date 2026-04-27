@@ -470,7 +470,7 @@ export default async function AdminPage({
       .order('name', { ascending: true }),
   ])
 
-  const submissions = (submissionsData ?? []) as UserSubmission[]
+  const submissions = (submissionsData ?? []) as unknown as UserSubmission[]
   const photos = (photosData ?? []).map((p: any) => ({
     ...p,
     venue_name: p.venue?.name ?? null,

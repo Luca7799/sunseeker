@@ -149,9 +149,8 @@ export async function POST(request: NextRequest) {
     // ------------------------------------------------------------------
     // Increment user's submission count
     // ------------------------------------------------------------------
-    await supabase.rpc('increment_user_submission_count', { uid: userId }).catch(() => {
-      // Non-critical — ignore errors
-    })
+    // Non-critical — ignore errors
+    void supabase.rpc('increment_user_submission_count', { uid: userId })
 
     return NextResponse.json({ data: submission, error: null }, { status: 201 })
   } catch (err) {

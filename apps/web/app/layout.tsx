@@ -17,9 +17,10 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" className={inter.variable}>
       <body className="bg-stone-50 font-sans text-stone-900 antialiased">
-        <Header />
-        <main className="relative">{children}</main>
-        <Toaster />
+        <Toaster>
+          <Header />
+          <main className="relative">{children}</main>
+        </Toaster>
       </body>
     </html>
   )

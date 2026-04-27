@@ -173,14 +173,11 @@ export async function PATCH(request: NextRequest) {
     // Adjust user trust score based on action
     if (submission.user_id) {
       const trustDelta = action === 'approve' ? 2 : -1
-      await supabase
-        .rpc('adjust_user_trust_score', {
-          uid: submission.user_id,
-          delta: trustDelta,
-        })
-        .catch(() => {
-          // Non-critical
-        })
+      // Non-critical — ignore errors
+      void supabase.rpc('adjust_user_trust_score', {
+        uid: submission.user_id,
+        delta: trustDelta,
+      })
     }
 
     return NextResponse.json({ data: updated, error: null })

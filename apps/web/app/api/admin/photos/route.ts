@@ -115,15 +115,13 @@ export async function PATCH(request: NextRequest) {
 
     // If setting as featured, unset any existing featured photo for this venue
     if (setFeatured && existingPhoto.venue_id) {
-      await supabase
+      // Non-critical — ignore errors
+      void supabase
         .from('photos')
         .update({ is_featured: false })
         .eq('venue_id', existingPhoto.venue_id)
         .eq('is_featured', true)
         .neq('id', id)
-        .catch(() => {
-          // Non-critical
-        })
     }
 
     const { data: updated, error: updateError } = await supabase
@@ -144,14 +142,11 @@ export async function PATCH(request: NextRequest) {
     // Adjust uploader trust score
     if (existingPhoto.uploaded_by) {
       const trustDelta = action === 'approve' ? 2 : -1
-      await supabase
-        .rpc('adjust_user_trust_score', {
-          uid: existingPhoto.uploaded_by,
-          delta: trustDelta,
-        })
-        .catch(() => {
-          // Non-critical
-        })
+      // Non-critical — ignore errors
+      void supabase.rpc('adjust_user_trust_score', {
+        uid: existingPhoto.uploaded_by,
+        delta: trustDelta,
+      })
     }
 
     return NextResponse.json({ data: updated, error: null })
