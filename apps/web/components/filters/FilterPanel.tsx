@@ -293,10 +293,23 @@ export function FilterPanel({ compact = false }: FilterPanelProps) {
     )
   }
 
-  // Full inline panel (e.g. for desktop sidebar or map overlay)
+  // On mobile: compact trigger button + bottom sheet
+  // On desktop (md+): full inline panel
   return (
-    <div className="bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden">
-      <FilterContent />
-    </div>
+    <>
+      {/* Mobile: compact button + bottom sheet */}
+      <div className="md:hidden">
+        <CompactFilterButton
+          onClick={() => setSheetOpen(true)}
+          count={activeFilterCount}
+        />
+        <FilterBottomSheet open={sheetOpen} onClose={() => setSheetOpen(false)} />
+      </div>
+
+      {/* Desktop: full inline sidebar panel */}
+      <div className="hidden md:block bg-white rounded-2xl border border-stone-100 shadow-sm overflow-hidden w-72">
+        <FilterContent />
+      </div>
+    </>
   )
 }

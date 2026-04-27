@@ -17,8 +17,8 @@ export default async function HomePage() {
         <ViewToggle activeView="map" />
       </div>
 
-      {/* Filter panel — slides in from top on mobile, fixed sidebar on desktop */}
-      <div className="absolute top-14 left-3 z-10 md:top-3 md:left-3">
+      {/* Filter button — bottom centre on mobile, top-left panel on desktop */}
+      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-10 md:bottom-auto md:top-3 md:left-3 md:translate-x-0">
         <FilterPanel />
       </div>
 
