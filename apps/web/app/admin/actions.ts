@@ -40,7 +40,7 @@ async function assertAdmin(): Promise<string> {
  * Approve a user submission.
  * Sets status='approved', records reviewer and timestamp.
  */
-export async function approveSubmission(submissionId: string): Promise<void> {
+export async function approveSubmission(submissionId: string, _formData: FormData): Promise<void> {
   const reviewerId = await assertAdmin()
   const adminSupabase = createAdminClient()
 
@@ -68,7 +68,7 @@ export async function approveSubmission(submissionId: string): Promise<void> {
  */
 export async function rejectSubmission(
   submissionId: string,
-  note?: string,
+  _formData: FormData,
 ): Promise<void> {
   const reviewerId = await assertAdmin()
   const adminSupabase = createAdminClient()
@@ -80,7 +80,6 @@ export async function rejectSubmission(
       reviewed_by: reviewerId,
       reviewed_at: new Date().toISOString(),
       moderation_action: 'reject',
-      ...(note ? { review_note: note } : {}),
     })
     .eq('id', submissionId)
 
@@ -102,7 +101,7 @@ export async function rejectSubmission(
  */
 export async function approvePhoto(
   photoId: string,
-  isFeatured?: boolean,
+  _formData: FormData,
 ): Promise<void> {
   await assertAdmin()
   const adminSupabase = createAdminClient()
@@ -111,7 +110,6 @@ export async function approvePhoto(
     .from('photos')
     .update({
       status: 'approved',
-      ...(isFeatured !== undefined ? { is_featured: isFeatured } : {}),
     })
     .eq('id', photoId)
 
@@ -127,7 +125,7 @@ export async function approvePhoto(
  * Reject a photo submission.
  * Sets status='rejected'.
  */
-export async function rejectPhoto(photoId: string): Promise<void> {
+export async function rejectPhoto(photoId: string, _formData: FormData): Promise<void> {
   await assertAdmin()
   const adminSupabase = createAdminClient()
 
