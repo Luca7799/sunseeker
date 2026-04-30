@@ -150,24 +150,72 @@ export async function getVenuesNear(
 }
 
 /**
- * Fetch all curated venues (hand-picked editorial selection).
+ * Fetch all curated venues (hand-picked editorial selection),
+ * with the most recent valid sunlight prediction attached to each.
  * Used for the initial load / featured list.
  */
 export async function getAllCuratedVenues(): Promise<VenueSummary[]> {
   try {
     const supabase = createClient()
-    const { data, error } = await supabase
+
+    // Fetch venues
+    const { data: venueData, error: venueError } = await supabase
       .from('venues')
       .select(VENUE_SUMMARY_SELECT)
       .eq('is_curated', true)
       .eq('is_active', true)
       .order('name', { ascending: true })
 
-    if (error) {
-      console.error('[venues] getAllCuratedVenues error:', error.message)
+    if (venueError) {
+      console.error('[venues] getAllCuratedVenues error:', venueError.message)
       return []
     }
-    return (data ?? []) as VenueSummary[]
+
+    const venues = (venueData ?? []) as VenueSummary[]
+    if (venues.length === 0) return []
+
+    // Fetch the most recent non-stale prediction for each venue,
+    // for prediction_time closest to now
+    const now = new Date()
+    const windowStart = new Date(now.getTime() - 20 * 60 * 1000).toISOString() // 20 min ago
+    const windowEnd   = new Date(now.getTime() + 40 * 60 * 1000).toISOString() // 40 min ahead
+
+    const venueIds = venues.map((v) => v.id)
+    const { data: predData, error: predError } = await supabase
+      .from('sunlight_predictions')
+      .select(SUNLIGHT_SELECT)
+      .in('venue_id', venueIds)
+      .eq('is_stale', false)
+      .gte('prediction_time', windowStart)
+      .lte('prediction_time', windowEnd)
+      .order('prediction_time', { ascending: true })
+
+    if (predError) {
+      console.error('[venues] getAllCuratedVenues predictions error:', predError.message)
+      // Return venues without sunlight rather than failing
+      return venues
+    }
+
+    // Build a map: venue_id → prediction closest to now
+    const predMap = new Map<string, SunlightPrediction>()
+    for (const pred of (predData ?? []) as SunlightPrediction[]) {
+      const vid = pred.venue_id!
+      if (!predMap.has(vid)) {
+        predMap.set(vid, pred)
+      } else {
+        // Keep the prediction whose time is closest to now
+        const existing = predMap.get(vid)!
+        const existingDiff = Math.abs(new Date(existing.prediction_time).getTime() - now.getTime())
+        const newDiff      = Math.abs(new Date(pred.prediction_time).getTime() - now.getTime())
+        if (newDiff < existingDiff) predMap.set(vid, pred)
+      }
+    }
+
+    // Attach predictions to venues
+    return venues.map((v) => ({
+      ...v,
+      sunlight: predMap.get(v.id) ?? null,
+    }))
   } catch (err) {
     console.error('[venues] getAllCuratedVenues threw:', err)
     return []
